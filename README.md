@@ -1,6 +1,6 @@
 # MiniMALTA3_shift_register
 
-
+Final implementation of MiniMALTA3 shift register code based on MALTA2 as subnitted to the foundry
 
 ## Getting started
 

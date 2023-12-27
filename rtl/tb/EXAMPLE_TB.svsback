@@ -1,0 +1,145 @@
+`timescale 1ns / 1ps
+
+// ===========================
+// ------ GLOBALS FILE -------
+// ===========================
+
+//	###/-+-\###
+
+`include	"/projects/TOWER180/ALICEITS/IS_OA_588/workAreas/" PLACE USER NAME HERE "/PROJECT/work_libs/user/cds/digital/"  PLACE DIRECTORY NAME HERE  "/rtl/globals.sv"
+
+
+// 	###\-+-/###
+
+
+// Change the path!!!
+// ------------------------------------------------------------------------
+
+
+`ifdef RTL
+
+	`include `netlist_rtl(`user,`dir_name,`FILE_rtl_net)
+
+`elsif SYN
+
+	`include `netlist_syn(`user,`dir_name,`FILE_syn_net)
+
+`elsif PNR
+
+	`include `netlist_pnr(`user,`dir_name,`FILE_pnr_net)
+	
+`elsif SAVE
+
+	`include `netlist_save(`user,`dir_name,`FILE_save_net)
+
+`endif
+
+
+
+
+
+
+module sync_memory_TB ();
+
+
+// For some reson, these do not work with compiler directives. A solution that comes to mind is defining and including them using separate files, but that seems a bit clunky.
+// try doing it through functions defined within the globals file again! - NOPE, not even that helps. It always seem to skip the annotation within the `ifdef.... why do the first ifdefs work in
+// the first place? It seems to be exactly the same, unless this is a peculiarity of the "$sdf_annotate" command.
+// for now, leave it like this.
+
+	initial begin
+
+
+
+// set up for post PnR simulations at the moment (the only ones that matter)
+
+//	###/-+-\###
+
+	`sdf_min(`annotate_pnr(`user,`dir_name,`FILE_pnr_sdf),sync_memory_TOP_MIN,"MINIMUM") 
+	
+	`sdf_min(`annotate_pnr(`user,`dir_name,`FILE_pnr_sdf),sync_memory_TOP_TYP,"TYPICAL") 
+
+	`sdf_min(`annotate_pnr(`user,`dir_name,`FILE_pnr_sdf),sync_memory_TOP_MAX,"MAXIMUM") 
+
+
+//	`sdf_min(`annotate_syn(`user,`dir_name,`FILE_syn_sdf),sync_memory_TOP_MAX,"MAXIMUM") 
+
+// 	###\-+-/###
+
+
+
+
+
+// the shit that refuses to work
+// ------vvvvvvvvvvvvvvvvv------
+
+
+`ifdef RTL
+
+			$display ("No SDF annotation for pure logic simulations!");
+
+`elsif SYN
+
+			$sdf_annotate(`annotate_syn(`user,`dir_name,`top_module_name),sync_memory_TOP_MAX,,,"MAXIMUM");
+
+`elsif PNR
+
+			$sdf_annotate(`annotate_pnr(`user,`dir_name,`FILE_pnr_sdf),sync_memory_TOP_MIN,,,"MINIMUM");
+
+			$sdf_annotate(`annotate_pnr(`user,`dir_name,`FILE_pnr_sdf),sync_memory_TOP_TYP,,,"TYPICAL");
+
+			$sdf_annotate(`annotate_pnr(`user,`dir_name,`FILE_pnr_sdf),sync_memory_TOP_MAX,,,"MAXIMUM");
+
+`elsif SAVE
+
+			$sdf_annotate(`annotate_save(`user,`dir_name,`SAVE),sync_memory_TOP_MIN,,,"MAXIMUM");
+
+			$sdf_annotate(`annotate_save(`user,`dir_name,`SAVE),sync_memory_TOP_TYP,,,"TYPICAL");
+
+			$sdf_annotate(`annotate_save(`user,`dir_name,`SAVE),sync_memory_TOP_MAX,,,"MAXIMUM");
+
+`endif
+
+// ------^^^^^^^^^^^^^^^^^------
+// ugh
+
+end
+
+	sync_memory_TOP 	sync_memory_TOP_MAX
+
+		(
+		.I_CLK			(CLK),
+		.I_CLK_FT		(CLK_FT),
+		.I_RST_B		(RST),
+		.I_EN_count		(EN),
+		.I_REF			(REF),
+		.I_READ			(READ),
+		.O_mem_addr_W		(mem_addr_W_MAX),
+		.O_mem_addr_R		(mem_addr_R_MAX),
+		.O_gray_count_W		(gray_count_W_MAX),
+		.O_gray_count_R		(gray_count_R_MAX),
+		.O_gray_count_BC	(gray_count_BC_MAX),
+		.O_gray_count_FT	(gray_count_FT_MAX)
+		);
+
+initial begin
+
+	CLK 	= 0;
+	CLK_FT	= 1;
+	RST 	= 1;
+	EN 	= 1;
+	REF 	= 0;
+	READ	= 0;
+
+
+	
+
+end
+
+
+
+
+always 	#12.512 		CLK 	= ~CLK;
+
+
+endmodule
